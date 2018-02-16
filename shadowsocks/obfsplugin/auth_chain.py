@@ -49,7 +49,7 @@ obfs_map = {
         'auth_chain_b': (create_auth_chain_b,),
 }
 
-class xorshift128plus(object):
+class xorshift128plus(object): #后续可能需要用 xoroshifto128代替
     max_int = (1 << 64) - 1
     mov_mask = (1 << (64 - 23)) - 1
 
@@ -363,13 +363,14 @@ class auth_chain_a(auth_base):
             self.user_key = self.server_info.key
 
         encryptor = encrypt.Encryptor(to_bytes(base64.b64encode(self.user_key)) + self.salt, 'aes-128-cbc', b'\x00' * 16)
-
+# 所有的aes-128-cbc都不安全
         uid = struct.unpack('<I', uid)[0] ^ struct.unpack('<I', self.last_client_hash[8:12])[0]
         uid = struct.pack('<I', uid)
         data = uid + encryptor.encrypt(data)[16:]
         self.last_server_hash = hmac.new(self.user_key, data, self.hashfunc).digest()
         data = check_head + data + self.last_server_hash[:4]
         self.encryptor = encrypt.Encryptor(to_bytes(base64.b64encode(self.user_key)) + to_bytes(base64.b64encode(self.last_client_hash)), 'rc4')
+        #所有的rc4可能都不安全
         return data + self.pack_client_data(buf)
 
     def auth_data(self):
